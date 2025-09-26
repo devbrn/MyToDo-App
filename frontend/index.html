@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- SEO Meta Tags -->
+    <title>MyToDo - Gerencie suas tarefas com velocidade</title>
+    <meta name="description" content="Aplicação web minimalista para gerenciamento de tarefas pessoais com processamento de linguagem natural e navegação por teclado." />
+    <meta name="keywords" content="todo, tarefas, produtividade, nlp, teclado" />
+    <meta name="author" content="MyToDo App" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="MyToDo - Gerencie suas tarefas com velocidade" />
+    <meta property="og:description" content="Aplicação web minimalista para gerenciamento de tarefas pessoais com processamento de linguagem natural." />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="MyToDo - Gerencie suas tarefas com velocidade" />
+    <meta name="twitter:description" content="Aplicação web minimalista para gerenciamento de tarefas pessoais." />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.ico" />
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#3b82f6" />
+    
+    <!-- Manifest for PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    
+    <!-- Robots -->
+    <meta name="robots" content="index, follow" />
+  </head>
+  <body>
+    <!-- Fallback para usuários sem JavaScript -->
+    <noscript>
+      <div style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 2rem;
+        text-align: center;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      ">
+        <h1 style="font-size: 2rem; margin-bottom: 1rem;">📝 MyToDo</h1>
+        <p style="font-size: 1.125rem; margin-bottom: 2rem; max-width: 600px;">
+          Esta aplicação requer JavaScript para funcionar corretamente.
+        </p>
+        <p style="font-size: 1rem; opacity: 0.8;">
+          Por favor, habilite o JavaScript no seu navegador e recarregue a página.
+        </p>
+      </div>
+    </noscript>
+    
+    <!-- Root element para React -->
+    <div id="root"></div>
+    
+    <!-- Loading indicator -->
+    <div id="loading" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      z-index: 9999;
+    ">
+      <div style="font-size: 3rem; margin-bottom: 1rem; animation: pulse 2s infinite;">📝</div>
+      <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">MyToDo</h1>
+      <p style="font-size: 1rem; opacity: 0.8;">Carregando...</p>
+    </div>
+    
+    <!-- Script para remover loading quando React carregar -->
+    <script>
+      window.addEventListener('DOMContentLoaded', function() {
+        // Remove loading após um pequeno delay para evitar flash
+        setTimeout(function() {
+          const loading = document.getElementById('loading');
+          if (loading) {
+            loading.style.opacity = '0';
+            loading.style.transition = 'opacity 0.3s ease';
+            setTimeout(function() {
+              loading.remove();
+            }, 300);
+          }
+        }, 100);
+      });
+    </script>
+    
+    <!-- Vite script -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,58 @@
+// datasource db define a conexão com o banco de dados.
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// generator client informa que vamos usar o Prisma Client para interagir com o banco.
+generator client {
+  provider = "prisma-client-js"
+  // Comando para executar o script de seed
+  seed = "tsx prisma/seed.ts"
+}
+
+// Modelo de uma Tarefa (Task)
+model Task {
+  id           String   @id @default(cuid())
+  content      String
+  completed    Boolean  @default(false)
+  archived     Boolean  @default(false)
+  dueDate      DateTime?
+  
+  // Relação com Project: Uma tarefa pode pertencer a um projeto
+  projectId    String?  // Foreign key para Project
+  project      Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectColor String?  // Cor do projeto (ID do tema de cor)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relação com Tags: Uma tarefa pode ter várias tags.
+  tags      Tag[]
+
+  // Otimização: Índice para buscas por status e data.
+  @@index([completed, dueDate])
+  @@index([projectId]) // Índice para buscas por projeto
+  @@index([archived]) // Índice para buscas por tarefas arquivadas
+}
+
+// Modelo de uma Tag/Etiqueta
+model Tag {
+  id    String @id @default(cuid())
+  name  String @unique
+  color String? // Cor da tag (ID do tema de cor)
+  
+  // Relação com Tarefas: Uma tag pode estar em várias tarefas.
+  tasks Task[]
+}
+
+// Modelo de um Projeto
+model Project {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relação com Tasks: Um projeto pode ter várias tarefas
+  tasks     Task[]
+}
