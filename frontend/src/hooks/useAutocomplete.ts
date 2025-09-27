@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Project, Tag } from '@/types';
 import { AutocompleteItem } from '@/components/AutocompleteDropdown';
+import { normalizeProjectName } from '@/utils/normalizeProjectName';
 
 interface AutocompleteState {
   isVisible: boolean;
@@ -119,6 +120,7 @@ export function useAutocomplete({
    */
   /**
    * Manipula mudanças no input para detectar triggers de autocomplete
+   * Aplica normalização automática em tempo real para projetos (@)
    */
   const handleInputChange = useCallback((value: string, cursorPosition: number) => {
     if (!inputRef.current) return;
@@ -147,7 +149,35 @@ export function useAutocomplete({
 
     // Se encontrou trigger e está na posição correta
     if (triggerChar && triggerPos >= 0 && searchStart <= cursorPosition) {
-      const searchTerm = value.substring(searchStart, cursorPosition);
+      let searchTerm = value.substring(searchStart, cursorPosition);
+      
+      // Aplicar normalização em tempo real para projetos (@)
+      if (triggerChar === '@') {
+        const normalizedTerm = normalizeProjectName(searchTerm);
+        
+        // Se o termo foi normalizado, atualizar o input
+        if (normalizedTerm !== searchTerm && inputRef.current) {
+          const beforeTrigger = value.substring(0, searchStart);
+          const afterCursor = value.substring(cursorPosition);
+          const newValue = beforeTrigger + normalizedTerm + afterCursor;
+          
+          // Atualizar o valor do input
+          inputRef.current.value = newValue;
+          
+          // Ajustar a posição do cursor
+          const newCursorPosition = searchStart + normalizedTerm.length;
+          inputRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+          
+          // Disparar evento de mudança para sincronizar com o estado do componente
+          const event = new Event('input', { bubbles: true });
+          inputRef.current.dispatchEvent(event);
+          
+          // Atualizar o termo de busca para o valor normalizado
+          searchTerm = normalizedTerm;
+          cursorPosition = newCursorPosition;
+        }
+      }
+      
       const type = triggerChar === '@' ? 'project' : 'tag';
       
       setState(prev => ({
@@ -179,7 +209,7 @@ export function useAutocomplete({
     if (!state.isVisible) return;
 
     const items = getCurrentItems().filter(item =>
-      item.name.toLowerCase().includes(state.searchTerm.toLowerCase())
+      item?.name?.toLowerCase().includes(state.searchTerm.toLowerCase())
     );
     
     // Adicionar item "criar novo" se houver termo de busca
@@ -210,7 +240,7 @@ export function useAutocomplete({
     // Se não há item selecionado, usar o item atualmente selecionado
     if (!selectedItem) {
       const items = getCurrentItems().filter(i =>
-        i.name.toLowerCase().includes(state.searchTerm.toLowerCase())
+        i?.name?.toLowerCase().includes(state.searchTerm.toLowerCase())
       );
       
       if (state.selectedIndex < items.length) {

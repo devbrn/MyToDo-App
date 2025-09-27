@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { createApp } from './app';
+import { getBackendPort, saveBackendPort } from './utils/portUtils';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -10,7 +11,12 @@ dotenv.config();
 export async function startServer(): Promise<void> {
   try {
     const app = createApp();
-    const port = process.env.PORT || 3001;
+    
+    // Encontrar porta disponível automaticamente
+    const port = await getBackendPort();
+    
+    // Salvar configuração de porta para comunicação com frontend
+    saveBackendPort(port);
 
     const server = app.listen(port, () => {
       console.log(`🚀 Servidor rodando na porta ${port}`);

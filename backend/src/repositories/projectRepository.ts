@@ -1,14 +1,18 @@
-import { PrismaClient } from '@prisma/client';
+import { getPrismaClient } from '../config/database';
+import { normalizeProjectName } from '../utils/validation';
 
-const prisma = new PrismaClient();
+const prisma = getPrismaClient();
 
+/**
+ * Repositório para operações com projetos
+ */
 export class ProjectRepository {
   /**
-   * Busca todos os projetos, incluindo aqueles sem tarefas associadas
+   * Lista todos os projetos
    */
   async findAll() {
     return await prisma.project.findMany({
-      orderBy: { name: 'asc' }
+      orderBy: { createdAt: 'desc' }
     });
   }
 
@@ -22,20 +26,36 @@ export class ProjectRepository {
   }
 
   /**
-   * Busca um projeto pelo nome (case-insensitive)
+   * Busca um projeto pelo nome normalizado (evita duplicações)
    */
   async findByName(name: string) {
     console.log('🔍 [DEBUG BACKEND] ProjectRepository.findByName - Buscando projeto:', name);
     
     try {
-      // Buscar projeto com comparação case-insensitive exata
-      // SQLite não suporta mode insensitive nativo, então fazemos busca manual
+      const normalizedName = normalizeProjectName(name);
+      console.log('🔍 [DEBUG BACKEND] ProjectRepository.findByName - Nome normalizado:', normalizedName);
+      
+      // Primeiro, buscar pelo nome normalizado
+      const projectByNormalized = await prisma.project.findFirst({
+        where: { normalizedName }
+      });
+      
+      if (projectByNormalized) {
+        console.log('🔍 [DEBUG BACKEND] ProjectRepository.findByName - Encontrado por nome normalizado:', projectByNormalized.id);
+        return projectByNormalized;
+      }
+      
+      // Se não encontrou pelo normalizado, buscar pelo nome original (para compatibilidade com dados antigos)
       const allProjects = await prisma.project.findMany();
       
       // Primeiro, tentar match exato (case-sensitive)
       const exactMatch = allProjects.find(project => project.name === name);
       if (exactMatch) {
         console.log('🔍 [DEBUG BACKEND] ProjectRepository.findByName - Encontrado match exato:', exactMatch.id);
+        // Atualizar com nome normalizado se não tiver
+        if (!exactMatch.normalizedName) {
+          await this.updateNormalizedName(exactMatch.id, normalizedName);
+        }
         return exactMatch;
       }
       
@@ -46,6 +66,10 @@ export class ProjectRepository {
       
       if (caseInsensitiveMatch) {
         console.log('🔍 [DEBUG BACKEND] ProjectRepository.findByName - Encontrado match case-insensitive:', caseInsensitiveMatch.id);
+        // Atualizar com nome normalizado se não tiver
+        if (!caseInsensitiveMatch.normalizedName) {
+          await this.updateNormalizedName(caseInsensitiveMatch.id, normalizedName);
+        }
       } else {
         console.log('🔍 [DEBUG BACKEND] ProjectRepository.findByName - Nenhum projeto encontrado');
       }
@@ -58,16 +82,22 @@ export class ProjectRepository {
   }
 
   /**
-   * Cria um novo projeto
+   * Cria um novo projeto com nome normalizado
    */
   async create(name: string) {
     console.log('🔍 [DEBUG PROJECT REPO] Criando projeto:', name);
     
+    const normalizedName = normalizeProjectName(name);
+    console.log('🔍 [DEBUG PROJECT REPO] Nome normalizado:', normalizedName);
+    
     const project = await prisma.project.create({
-      data: { name }
+      data: { 
+        name,
+        normalizedName
+      }
     });
     
-    console.log('🔍 [DEBUG PROJECT REPO] Projeto criado com sucesso:', { id: project.id, name: project.name });
+    console.log('🔍 [DEBUG PROJECT REPO] Projeto criado com sucesso:', { id: project.id, name: project.name, normalizedName: project.normalizedName });
     return project;
   }
 
@@ -75,9 +105,24 @@ export class ProjectRepository {
    * Atualiza um projeto
    */
   async update(id: string, name: string) {
+    const normalizedName = normalizeProjectName(name);
+    
     return await prisma.project.update({
       where: { id },
-      data: { name }
+      data: { 
+        name,
+        normalizedName
+      }
+    });
+  }
+
+  /**
+   * Atualiza apenas o nome normalizado de um projeto
+   */
+  private async updateNormalizedName(id: string, normalizedName: string) {
+    return await prisma.project.update({
+      where: { id },
+      data: { normalizedName }
     });
   }
 

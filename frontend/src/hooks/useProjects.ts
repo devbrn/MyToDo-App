@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api, Project, CreateProjectRequest, UpdateProjectRequest } from '@/services/api';
+import { normalizeProjectName } from '@/utils/normalizeProjectName';
 
 /**
  * Hook para gerenciar projetos
@@ -35,7 +36,7 @@ export const useProjects = () => {
     console.log('🔍 [DEBUG FRONTEND PROJECTS] Tentando criar projeto:', data.name);
     
     // Verificar se o projeto já existe localmente antes de fazer a requisição
-    const existingLocalProject = projects.find(p => p.name.toLowerCase() === data.name.toLowerCase());
+    const existingLocalProject = projects.find(p => p?.name?.toLowerCase() === data.name.toLowerCase());
     if (existingLocalProject) {
       console.log('🔍 [DEBUG FRONTEND PROJECTS] Projeto já existe na lista local:', existingLocalProject.id);
       return existingLocalProject;
@@ -70,7 +71,7 @@ export const useProjects = () => {
             console.log('🔍 [DEBUG FRONTEND PROJECTS] Usuário escolheu usar projeto existente');
             
             // Buscar o projeto existente pelo nome (case-insensitive)
-            const existingProject = projects.find(p => p.name.toLowerCase() === data.name.toLowerCase());
+            const existingProject = projects.find(p => p?.name?.toLowerCase() === data.name.toLowerCase());
             if (existingProject) {
               console.log('🔍 [DEBUG FRONTEND PROJECTS] Projeto existente encontrado na lista local:', existingProject.id);
               return existingProject;
@@ -82,7 +83,7 @@ export const useProjects = () => {
             
             // Buscar novamente após recarregar (aguardar atualização do estado)
             const updatedProjects = await api.getProjects();
-            const updatedProject = updatedProjects.find(p => p.name.toLowerCase() === data.name.toLowerCase());
+            const updatedProject = updatedProjects.find(p => p?.name?.toLowerCase() === data.name.toLowerCase());
             if (updatedProject) {
               console.log('🔍 [DEBUG FRONTEND PROJECTS] Projeto encontrado após recarregar:', updatedProject.id);
               return updatedProject;
@@ -134,17 +135,37 @@ export const useProjects = () => {
   }, []);
 
   /**
-   * Busca um projeto por nome
+   * Busca um projeto por nome (usando normalização para comparação)
    */
   const findProjectByName = useCallback((name: string): Project | undefined => {
-    return projects.find(project => project.name === name);
+    const normalizedSearchName = normalizeProjectName(name);
+    
+    // Primeiro, tentar buscar por nome exato
+    const exactMatch = projects.find(project => project.name === name);
+    if (exactMatch) return exactMatch;
+    
+    // Se não encontrou, buscar por nome normalizado
+    return projects.find(project => {
+      const projectNormalized = normalizeProjectName(project.name);
+      return projectNormalized === normalizedSearchName;
+    });
   }, [projects]);
 
   /**
-   * Verifica se um projeto existe
+   * Verifica se um projeto existe (usando normalização para comparação)
    */
   const projectExists = useCallback((name: string): boolean => {
-    return projects.some(project => project.name === name);
+    const normalizedSearchName = normalizeProjectName(name);
+    
+    // Primeiro, verificar por nome exato
+    const exactMatch = projects.some(project => project.name === name);
+    if (exactMatch) return true;
+    
+    // Se não encontrou, verificar por nome normalizado
+    return projects.some(project => {
+      const projectNormalized = normalizeProjectName(project.name);
+      return projectNormalized === normalizedSearchName;
+    });
   }, [projects]);
 
   // Carrega projetos na inicialização (apenas uma vez)

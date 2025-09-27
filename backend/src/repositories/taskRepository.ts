@@ -264,20 +264,22 @@ export class TaskRepository {
    */
   async updateProjectName(oldName: string, newName: string): Promise<void> {
     // Primeiro, encontrar o projeto pelo nome antigo
-    const oldProject = await this.prisma.project.findUnique({
-      where: { name: oldName }
+    const oldProject = await this.prisma.project.findFirst({
+      where: { 
+        OR: [
+          { name: oldName },
+          { normalizedName: oldName.toLowerCase().replace(/\s+/g, '_') }
+        ]
+      }
     });
     
     if (!oldProject) {
-      throw new Error(`Projeto '${oldName}' não encontrado`);
+      console.log(`⚠️ Projeto '${oldName}' não encontrado para atualização. Isso pode ser normal se o projeto já foi atualizado.`);
+      return; // Não lançar erro, apenas retornar
     }
 
-    // Atualizar o nome do projeto na tabela Project
-    await this.prisma.project.update({
-      where: { id: oldProject.id },
-      data: { name: newName }
-    });
-    
+    // O projeto já foi atualizado pelo ProjectRepository.update()
     // As tarefas já estão vinculadas pelo projectId, então não precisamos atualizar nada na tabela Task
+    console.log(`✅ Projeto '${oldName}' -> '${newName}' atualizado com sucesso`);
   }
 }

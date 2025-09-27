@@ -203,16 +203,21 @@ export class NLPProcessor {
    * @returns Texto limpo e projeto extraído
    */
   private static extractProject(content: string): { cleanContent: string; project: string | null } {
-    const projectPattern = /@(\w+)/g;
+    // Regex melhorado para capturar nomes de projetos com espaços
+    // Captura tudo após @ até encontrar um espaço seguido de palavra ou fim da string
+    const projectPattern = /@([^@\n\r]+?)(?=\s+\w|\s*$)/g;
     const match = projectPattern.exec(content);
     
     let project: string | null = null;
     if (match && match[1]) {
-      project = match[1].toLowerCase();
+      // Aplicar normalização ao nome do projeto extraído
+      const { normalizeProjectName } = require('./validation');
+      const rawProjectName = match[1].trim();
+      project = normalizeProjectName(rawProjectName);
     }
 
     // Remover projeto do conteúdo (apenas o primeiro encontrado)
-    const cleanContent = content.replace(/@\w+/, '').replace(/\s+/g, ' ').trim();
+    const cleanContent = content.replace(/@[^@\n\r]+?(?=\s+\w|\s*$)/, '').replace(/\s+/g, ' ').trim();
 
     return { cleanContent, project };
   }

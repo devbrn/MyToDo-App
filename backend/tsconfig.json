@@ -27,7 +27,8 @@
       "@/services/*": ["./services/*"],
       "@/repositories/*": ["./repositories/*"],
       "@/types/*": ["./types/*"],
-      "@/utils/*": ["./utils/*"]
+      "@/utils/*": ["./utils/*"],
+      "@/lib/*": ["./lib/*"]
     }
   },
   "include": [

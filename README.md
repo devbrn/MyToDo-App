@@ -22,7 +22,7 @@ Uma aplicação web de tarefas pessoais com foco em velocidade, interface minima
 
 ### Pré-requisitos
 - Node.js 18+
-- PostgreSQL 14+
+- PostgreSQL 14+ (ou SQLite para desenvolvimento)
 - npm ou yarn
 
 ### Instalação
@@ -38,13 +38,16 @@ cd MyToDo
 npm install
 ```
 
-3. **Configure o banco de dados:**
+3. **Configure o ambiente:**
 ```bash
-# Copie o arquivo de exemplo
+# Backend - Copie o arquivo de exemplo
 cp backend/.env.example backend/.env
 
-# Edite o arquivo .env com suas configurações de banco
-# DATABASE_URL="postgresql://username:password@localhost:5432/mytodo_db?schema=public"
+# Frontend - Copie o arquivo de exemplo  
+cp frontend/.env.example frontend/.env
+
+# Edite os arquivos .env conforme necessário
+# O sistema detecta automaticamente portas disponíveis
 ```
 
 4. **Execute as migrations:**
@@ -59,24 +62,56 @@ npm run db:generate
 
 ## 🚀 Executando o Projeto
 
-### Desenvolvimento (Frontend + Backend)
+### Desenvolvimento (Recomendado)
 ```bash
+# Inicia backend e frontend de forma coordenada
+# O sistema detecta automaticamente portas disponíveis
 npm run dev
 ```
 
-### Executar separadamente
+**Funcionalidades do novo sistema:**
+- ✅ **Detecção automática de portas:** Evita conflitos de porta
+- ✅ **Inicialização coordenada:** Backend inicia primeiro, depois frontend
+- ✅ **Configuração dinâmica:** Frontend se conecta automaticamente ao backend
+- ✅ **Logs organizados:** Saída clara de ambos os serviços
+- ✅ **Shutdown graceful:** Ctrl+C encerra ambos os serviços
+
+### Executar separadamente (Modo Legado)
 ```bash
-# Backend (porta 3001)
+# Backend (porta padrão: 3001, detecta automaticamente se ocupada)
 npm run dev:backend
 
-# Frontend (porta 3000)
+# Frontend (porta padrão: 3004, detecta automaticamente se ocupada)  
 npm run dev:frontend
+
+# Modo antigo (sem detecção de porta)
+npm run dev:old
 ```
 
 ### Build para Produção
 ```bash
 npm run build
 npm start
+```
+
+## 🔧 Configuração de Portas
+
+O sistema implementa **detecção automática de portas** para evitar conflitos:
+
+### Backend
+- **Porta padrão:** 3001
+- **Detecção:** Se a porta estiver ocupada, tenta 3002, 3003, etc.
+- **Configuração:** Salva automaticamente em `port-config.json`
+
+### Frontend  
+- **Porta padrão:** 3004 (Vite)
+- **Detecção:** Vite detecta automaticamente portas ocupadas
+- **API:** Lê configuração do backend automaticamente
+
+### Arquivos de Configuração
+```
+port-config.json          # Gerado automaticamente pelo backend
+frontend/public/port-config.json  # Copiado pelo script de inicialização
 ```
 
 ## 🗄️ Banco de Dados

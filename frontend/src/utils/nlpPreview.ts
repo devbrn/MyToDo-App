@@ -1,5 +1,6 @@
 import { addDays, startOfDay, setHours, setMinutes, setSeconds, setMilliseconds } from 'date-fns';
 import { NLPPreview } from '@/types';
+import { normalizeProjectName } from './normalizeProjectName';
 
 /**
  * Utilitário para preview do processamento NLP no frontend
@@ -260,16 +261,20 @@ export class NLPPreviewProcessor {
    * @returns Texto limpo e projeto extraído
    */
   private static extractProject(content: string): { cleanContent: string; project?: string } {
-    const projectPattern = /@(\w+)/g;
+    // Regex melhorado para capturar nomes de projetos com espaços
+    // Captura tudo após @ até encontrar um espaço seguido de palavra ou fim da string
+    const projectPattern = /@([^@\n\r]+?)(?=\s+\w|\s*$)/g;
     const match = projectPattern.exec(content);
     
     let project: string | undefined = undefined;
     if (match && match[1]) {
-      project = match[1].toLowerCase();
+      // Aplicar normalização ao nome do projeto extraído
+      const rawProjectName = match[1].trim();
+      project = normalizeProjectName(rawProjectName);
     }
 
     // Remover projeto do conteúdo (apenas o primeiro encontrado)
-    const cleanContent = content.replace(/@\w+/, '').trim();
+    const cleanContent = content.replace(/@[^@\n\r]+?(?=\s+\w|\s*$)/, '').trim();
 
     return { cleanContent, project };
   }
